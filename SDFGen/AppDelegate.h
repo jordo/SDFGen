@@ -18,3 +18,14 @@
 - (IBAction)generate:(id)sender;
 
 @end
+
+@interface DistancePoint : NSObject
+
+@property (nonatomic) CGPoint point;
+
+@property (nonatomic, readonly) float distSqr;
+@property (nonatomic, readonly) float dist;
+
+- (id)initWithPoint:(CGPoint) point;
+
+@end
