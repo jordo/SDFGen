@@ -19,6 +19,7 @@
 		D2912373199D7F43000CD501 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D2912371199D7F43000CD501 /* InfoPlist.strings */; };
 		D2912375199D7F43000CD501 /* SDFGenTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D2912374199D7F43000CD501 /* SDFGenTests.m */; };
 		D2C012CE19A03E42008C5FDD /* tinydist.png in Resources */ = {isa = PBXBuildFile; fileRef = D2C012CD19A03E42008C5FDD /* tinydist.png */; };
+		D2C012D019A194FA008C5FDD /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2C012CF19A194FA008C5FDD /* Accelerate.framework */; };
 		D2EC6060199ED43E001A15E9 /* inputImage.png in Resources */ = {isa = PBXBuildFile; fileRef = D2EC605F199ED43E001A15E9 /* inputImage.png */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +54,7 @@
 		D2912372199D7F43000CD501 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D2912374199D7F43000CD501 /* SDFGenTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SDFGenTests.m; sourceTree = "<group>"; };
 		D2C012CD19A03E42008C5FDD /* tinydist.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tinydist.png; sourceTree = "<group>"; };
+		D2C012CF19A194FA008C5FDD /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		D2EC605F199ED43E001A15E9 /* inputImage.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = inputImage.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -61,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2C012D019A194FA008C5FDD /* Accelerate.framework in Frameworks */,
 				D291234B199D7F43000CD501 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -100,6 +103,7 @@
 		D2912349199D7F43000CD501 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D2C012CF19A194FA008C5FDD /* Accelerate.framework */,
 				D291234A199D7F43000CD501 /* Cocoa.framework */,
 				D2912369199D7F43000CD501 /* XCTest.framework */,
 				D291234C199D7F43000CD501 /* Other Frameworks */,

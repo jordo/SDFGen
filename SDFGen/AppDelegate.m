@@ -80,7 +80,8 @@
             {
                 CGPoint currentLoc = CGPointMake(x, y);
 
-                dist = [self search:inputBitmapRep loc:currentLoc];
+//                dist = [self search:inputBitmapRep loc:currentLoc];
+                dist = [self searchAround:inputBitmapRep loc:currentLoc];
                 
                 //NSLog(@"dist %i at %i, %i", dist, x, y);
             }
@@ -102,6 +103,296 @@
 - (BOOL)isBlack:(NSColor*)color
 {
     return  color.redComponent == 0.0 && color.greenComponent == 0.0 && color.blueComponent == 0.0;
+}
+
+- (int)searchAround:(NSBitmapImageRep*)imageRep loc:(CGPoint)loc
+{
+    // search 255 pixels around loc
+    CGSize size = CGSizeMake(_inputImage.size.width, _inputImage.size.height);
+    int dist = 255;
+    int tempDist = 0;
+    int offset = 1;
+    int row = 0;
+    int col = 0;
+    
+    BOOL breakEarly = YES;
+    
+    while(offset < 128)
+    {
+        row = loc.y;
+        col = loc.x;
+        
+        // go down a row
+        row = loc.y + offset;
+        if(row < size.height)
+        {
+            // center
+            NSColor* color = [imageRep colorAtX:row y:col];
+            if([self isBlack:color] == NO)
+            {
+                tempDist = [self dist:loc b:CGPointMake(row, col)];
+                dist =  (dist < tempDist) ? dist : tempDist;
+                
+                if(breakEarly)
+                {
+                    return dist;
+                    offset = 256;
+                    break;
+                }
+            }
+            
+            // search left
+            for(int x = 0; x < offset; x++)
+            {
+                col = loc.x - (x + 1);
+                
+                if(col >= 0)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+
+                    }
+                }
+            }
+            
+            // search right
+            for(int x = 0; x < offset; x++)
+            {
+                col = loc.x + (x + 1);
+                
+                if(col < size.width)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+                    }
+                }
+            }
+        } // down a row
+        
+        // up a row
+        row = loc.y - offset;
+        col = loc.x;
+        if(row >= 0)
+        {
+            // center
+            NSColor* color = [imageRep colorAtX:row y:col];
+            if([self isBlack:color] == NO)
+            {
+                tempDist = [self dist:loc b:CGPointMake(row, col)];
+                dist =  (dist < tempDist) ? dist : tempDist;
+                
+                if(breakEarly)
+                {
+                    return dist;
+                    offset = 256;
+                    break;
+                }
+            }
+            
+            // search left
+            for(int x = 0; x < offset; x++)
+            {
+                col = loc.x - (x + 1);
+                
+                if(col >= 0)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // search right
+            for(int x = 0; x < offset; x++)
+            {
+                col = loc.x + (x + 1);
+                
+                if(col < size.width)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+                    }
+                }
+            }
+        } // up a row
+        
+        
+        // go left (column)
+        row = loc.y;
+        col = loc.x - offset;
+        if(col >= 0)
+        {
+            // center
+            NSColor* color = [imageRep colorAtX:row y:col];
+            if([self isBlack:color] == NO)
+            {
+                tempDist = [self dist:loc b:CGPointMake(row, col)];
+                dist =  (dist < tempDist) ? dist : tempDist;
+                
+                if(breakEarly)
+                {
+                    return dist;
+                    offset = 256;
+                    break;
+                }
+            }
+            
+            // search down
+            for(int y = 0; y < (offset / 2); y++)
+            {
+                row = loc.y + y;
+                if(row < size.height)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // search up
+            for(int y = 0; y < (offset / 2); y++)
+            {
+                row = loc.y - y;
+                if(row >= 0)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // go right (column)
+        row = loc.y;
+        col = loc.x + offset;
+        if(col >= 0)
+        {
+            // center
+            NSColor* color = [imageRep colorAtX:row y:col];
+            if([self isBlack:color] == NO)
+            {
+                tempDist = [self dist:loc b:CGPointMake(row, col)];
+                dist =  (dist < tempDist) ? dist : tempDist;
+                
+                if(breakEarly)
+                {
+                    return dist;
+                    offset = 256;
+                    break;
+                }
+            }
+            
+            // search down
+            for(int y = 0; y < (offset / 2); y++)
+            {
+                row = loc.y + y;
+                if(row < size.height)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // search up
+            for(int y = 0; y < (offset / 2); y++)
+            {
+                row = loc.y - y;
+                if(row >= 0)
+                {
+                    NSColor* color = [imageRep colorAtX:row y:col];
+                    if([self isBlack:color] == NO)
+                    {
+                        tempDist = [self dist:loc b:CGPointMake(row, col)];
+                        dist =  (dist < tempDist) ? dist : tempDist;
+                        
+                        if(breakEarly)
+                        {
+                            return dist;
+                            offset = 256;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        offset++;
+        
+    } // while
+    
+    return dist;
+    
 }
 
 - (int)search:(NSBitmapImageRep*)imageRep loc:(CGPoint)loc
