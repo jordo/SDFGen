@@ -19,7 +19,8 @@
 		D2912373199D7F43000CD501 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D2912371199D7F43000CD501 /* InfoPlist.strings */; };
 		D2912375199D7F43000CD501 /* SDFGenTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D2912374199D7F43000CD501 /* SDFGenTests.m */; };
 		D2C012CE19A03E42008C5FDD /* tinydist.png in Resources */ = {isa = PBXBuildFile; fileRef = D2C012CD19A03E42008C5FDD /* tinydist.png */; };
-		D2EC6060199ED43E001A15E9 /* inputImage.png in Resources */ = {isa = PBXBuildFile; fileRef = D2EC605F199ED43E001A15E9 /* inputImage.png */; };
+		D2EC606219A27B57001A15E9 /* mediumdist.png in Resources */ = {isa = PBXBuildFile; fileRef = D2EC606119A27B57001A15E9 /* mediumdist.png */; };
+		D2EC606819A283A4001A15E9 /* inputImage.png in Resources */ = {isa = PBXBuildFile; fileRef = D2EC606719A283A4001A15E9 /* inputImage.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,7 +54,8 @@
 		D2912372199D7F43000CD501 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D2912374199D7F43000CD501 /* SDFGenTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SDFGenTests.m; sourceTree = "<group>"; };
 		D2C012CD19A03E42008C5FDD /* tinydist.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tinydist.png; sourceTree = "<group>"; };
-		D2EC605F199ED43E001A15E9 /* inputImage.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = inputImage.png; sourceTree = "<group>"; };
+		D2EC606119A27B57001A15E9 /* mediumdist.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mediumdist.png; sourceTree = "<group>"; };
+		D2EC606719A283A4001A15E9 /* inputImage.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = inputImage.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -162,7 +164,8 @@
 		D2EC6058199E8F6E001A15E9 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				D2EC605F199ED43E001A15E9 /* inputImage.png */,
+				D2EC606719A283A4001A15E9 /* inputImage.png */,
+				D2EC606119A27B57001A15E9 /* mediumdist.png */,
 				D2C012CD19A03E42008C5FDD /* tinydist.png */,
 			);
 			name = Resources;
@@ -244,11 +247,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D2EC6060199ED43E001A15E9 /* inputImage.png in Resources */,
 				D2912355199D7F43000CD501 /* InfoPlist.strings in Resources */,
+				D2EC606219A27B57001A15E9 /* mediumdist.png in Resources */,
 				D2912363199D7F43000CD501 /* Images.xcassets in Resources */,
 				D291235B199D7F43000CD501 /* Credits.rtf in Resources */,
 				D2912361199D7F43000CD501 /* MainMenu.xib in Resources */,
+				D2EC606819A283A4001A15E9 /* inputImage.png in Resources */,
 				D2C012CE19A03E42008C5FDD /* tinydist.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
