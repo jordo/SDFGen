@@ -32,79 +32,41 @@ static CGPoint s_outside = {9999, 9999};
     [_inputImageView setImage:_inputImage];
 }
 
-- (void)loadOutputImage
+#pragma mark Image helpers
+
+- (NSImage *)imageResize:(NSImage*)image newSize:(NSSize)newSize
 {
+    [image setScalesWhenResized:YES];
+
+    NSImage *smallImage = [[NSImage alloc] initWithSize: newSize];
+    [smallImage lockFocus];
+    [image setSize: newSize];
+    [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
     
+    [image drawAtPoint:CGPointMake(0, 0) fromRect:CGRectMake(0, 0, newSize.width, newSize.height)
+             operation:NSCompositeCopy fraction:1.0];
+    
+    [smallImage unlockFocus];
+    return smallImage;
+}
+
+- (void)saveImageToFile:(NSImage*)image name:(NSString*)name
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsPath = [paths objectAtIndex:0];
+    NSString* path = [NSString stringWithFormat:@"%@/%@", documentsPath, name];
+    
+    NSData* imageData = [image TIFFRepresentation];
+    NSBitmapImageRep *rep = [[NSBitmapImageRep imageRepsWithData:imageData] objectAtIndex:0];
+    NSDictionary *imageProps = [NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:1.0] forKey:NSImageCompressionFactor];
+    imageData = [rep representationUsingType:NSJPEGFileType properties:imageProps];
+    if([imageData writeToFile:path atomically: NO] == NO)
+    {
+        NSLog(@"Warning: Failed to save %@", name);
+    }
 }
 
 #pragma mark DistanceField helpers
-
-- (int)dist:(CGPoint)a b:(CGPoint)b
-{
-    return sqrtf((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
-}
-
-#pragma mark Actions
-
-- (void)v1
-{
-    NSRect offscreenRect = NSMakeRect(0.0, 0.0, _inputImage.size.width, _inputImage.size.height);
-    NSBitmapImageRep* offscreenRep = nil;
-    
-    offscreenRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nil
-                                                           pixelsWide:offscreenRect.size.width
-                                                           pixelsHigh:offscreenRect.size.height
-                                                        bitsPerSample:8
-                                                      samplesPerPixel:4
-                                                             hasAlpha:YES
-                                                             isPlanar:NO
-                                                       colorSpaceName:NSCalibratedRGBColorSpace
-                                                         bitmapFormat:0
-                                                          bytesPerRow:(4 * offscreenRect.size.width)
-                                                         bitsPerPixel:32];
-    
-    
-    NSBitmapImageRep* inputBitmapRep = [[_inputImage representations] objectAtIndex:0];
-    
-    if(inputBitmapRep == nil)
-        return;
-    
-    
-    float spread = MIN(offscreenRect.size.width, offscreenRect.size.height);// (1 << scale);
-    float min = -spread;
-    float max = spread;
-    
-    for(int y = 0; y < offscreenRect.size.height; y++)
-    {
-        for (int x = 0; x < offscreenRect.size.width; x++)
-        {
-            NSColor* inputColor = [inputBitmapRep colorAtX:x y:y];
-            
-            int dist = -10;
-            
-            if([self isBlack:inputColor])
-            {
-                CGPoint currentLoc = CGPointMake(x, y);
-                
-                dist = [self search:inputBitmapRep loc:currentLoc];
-                
-                //NSLog(@"dist %i at %i, %i", dist, x, y);
-            }
-            
-            // normalize distance 0 == 0.5 (edge), dist < 0 inside, dist > 0.5 outside
-            float colorComponent = (255.0f / 2.0f) - (float)dist;
-            colorComponent /= 255.0f;
-            
-            NSColor* outputColor = [NSColor colorWithCalibratedRed:colorComponent green:colorComponent blue:colorComponent alpha:1.0];
-            [offscreenRep setColor:outputColor atX:x y:y];
-        }
-    }
-    
-    _outputImage = [[NSImage alloc] initWithCGImage:[offscreenRep CGImage] size:offscreenRect.size];
-    
-    [_outputImageView setImage:_outputImage];
-
-}
 
 CGPoint cell(int pixel)
 {
@@ -121,7 +83,7 @@ static CGPoint getCell(CGPoint** grid, int x, int y)
     // check bounds
     if(y < 0 || y >= s_height) return s_outside;
     if(x < 0 || x >= s_width) return s_outside;
-
+    
     return grid[y][x];
 }
 
@@ -134,7 +96,7 @@ static CGPoint compare(CGPoint** grid, CGPoint cell, int x, int y, int x2, int y
 {
     CGPoint other = getCell(grid, x + x2, y + y2);
     other = CGPointMake(other.x + x2, other.y + y2);
-
+    
     if(distSquared(other) < distSquared(cell))
         return other;
     
@@ -183,8 +145,22 @@ static void fillDistance(CGPoint** grid, int width, int height)
             grid[y][x] = point;
         }
     }
-
+    
 }
+
+static int npot(int n)
+{
+    n = n - 1;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n = n + 1;
+    return n;
+}
+
+#pragma mark Actions
 
 - (IBAction)generate:(id)sender
 {
@@ -201,36 +177,34 @@ static void fillDistance(CGPoint** grid, int width, int height)
     
     // create dst image with adjusted size
     float spread = 25.0;
-    float scale = 0.25;
+    float scale = 0.22;
     
     NSRect offscreenRect = NSMakeRect(0.0, 0.0, _inputImage.size.width + spread * 2,
                                       _inputImage.size.height + spread * 2);
     
-    int width = (int)offscreenRect.size.width;
-    int height = (int)offscreenRect.size.width;
-    s_width = width;
-    s_height = height;
+    s_width = (int)offscreenRect.size.width;
+    s_height = (int)offscreenRect.size.width;
     
     // create grid1
     CGPoint** grid1;
-    grid1 = (CGPoint**) malloc(height*sizeof(CGPoint*));
-    for(int i = 0; i < height; i++)
+    grid1 = (CGPoint**) malloc(s_height*sizeof(CGPoint*));
+    for(int i = 0; i < s_height; i++)
     {
-        grid1[i] = (CGPoint*) malloc(width*sizeof(CGPoint));
+        grid1[i] = (CGPoint*)malloc(s_width*sizeof(CGPoint));
     }
     
     CGPoint** grid2;
-    grid2 = (CGPoint**) malloc(height*sizeof(CGPoint*));
-    for(int i = 0; i < height; i++)
+    grid2 = (CGPoint**) malloc(s_height*sizeof(CGPoint*));
+    for(int i = 0; i < s_height; i++)
     {
-        grid2[i] = (CGPoint*) malloc(width*sizeof(CGPoint));
+        grid2[i] = (CGPoint*)malloc(s_width*sizeof(CGPoint));
     }
     
 
     // fill out the grids
-    for(int y = 0; y < height; y++)
+    for(int y = 0; y < s_height; y++)
     {
-        for(int x = 0; x < width; x++)
+        for(int x = 0; x < s_width; x++)
         {
             NSColor* inputColor = [inputBitmapRep colorAtX:x y:y];
             int pixel = (int)(inputColor.redComponent * 255.0f);
@@ -239,31 +213,21 @@ static void fillDistance(CGPoint** grid, int width, int height)
         }
     }
     
-    
-    fillDistance(grid1, width, height);
-//    for(int y = 0; y < height; y++)
-//    {
-//        for(int x = 0; x < width; x++)
-//        {
-//            if(grid1[y][x].x != 0.0 && grid1[y][x].y != 0.0)
-//                NSLog(@"%f, %f", grid1[y][x].x, grid1[y][x].y);
-//        }
-//    }
-    
-    fillDistance(grid2, width, height);
+    fillDistance(grid1, s_width, s_height);
+    fillDistance(grid2, s_width, s_height);
     
     // create distance field
     float** distanceField;
-    distanceField = (float**) malloc(height*sizeof(float*));
-    for(int i = 0; i < height; i++)
+    distanceField = (float**) malloc(s_height*sizeof(float*));
+    for(int i = 0; i < s_height; i++)
     {
-        distanceField[i] = (float*) malloc(width*sizeof(float));
+        distanceField[i] = (float*) malloc(s_width*sizeof(float));
     }
     
     // fill out the grids
-    for(int y = 0; y < height; y++)
+    for(int y = 0; y < s_height; y++)
     {
-        for(int x = 0; x < width; x++)
+        for(int x = 0; x < s_width; x++)
         {
             float dist1 = sqrtf(distSquared(grid1[y][x]));
             float dist2 = sqrtf(distSquared(grid2[y][x]));
@@ -290,9 +254,9 @@ static void fillDistance(CGPoint** grid, int width, int height)
     float maxDist = spread;
     float minDist = spread * -1;
     
-    for(int y = 0; y < height; y++)
+    for(int y = 0; y < s_height; y++)
     {
-        for(int x = 0; x < width; x++)
+        for(int x = 0; x < s_width; x++)
         {
             dist = distanceField[y][x];
             
@@ -314,9 +278,6 @@ static void fillDistance(CGPoint** grid, int width, int height)
                 dist = 255;
             }
             
-            distanceField[y][x] = (int)dist;
-//            NSLog(@"y %i, x: %i, %i", y, x, (int)dist);
-            
             float colorComponent = dist / 255.0f;
             
             NSColor* outputColor = [NSColor colorWithCalibratedRed:colorComponent green:colorComponent blue:colorComponent alpha:1.0];
@@ -324,62 +285,17 @@ static void fillDistance(CGPoint** grid, int width, int height)
         }
     }
     
-    
-    
-    
-    
-    
     free(grid1);
     free(grid2);
     free(distanceField);
     
     _outputImage = [[NSImage alloc] initWithCGImage:[offscreenRep CGImage] size:offscreenRect.size];
+    _outputImage = [self imageResize:_outputImage newSize:CGSizeMake(npot(s_width * scale), npot(s_height * scale))];
     
     [_outputImageView setImage:_outputImage];
-
-}
-
-- (BOOL)isBlack:(NSColor*)color
-{
-    return  color.redComponent == 0.0 && color.greenComponent == 0.0 && color.blueComponent == 0.0;
-}
-
-- (int)search:(NSBitmapImageRep*)imageRep loc:(CGPoint)loc
-{
-    CGSize size = CGSizeMake(_inputImage.size.width, _inputImage.size.height);
     
-    int dist = 1e6f;
-    int tempDist = 0;
-    
-    // search current row and any row above the current row
-    for(int y = loc.y; y >= 0; y--)
-    {
-        for(int x = 0; x < size.width; x++)
-        {
-            NSColor* color = [imageRep colorAtX:x y:y];
-            if([self isBlack:color] == NO)
-            {
-                tempDist = [self dist:loc b:CGPointMake(x, y)];
-                dist =  (dist < tempDist) ? dist : tempDist;
-            }
-        }
-    }
-    
-    // search all rows below the current row
-    for(int y = loc.y + 1; y < size.height; y++)
-    {
-        for(int x = 0; x < size.width; x++)
-        {
-            NSColor* color = [imageRep colorAtX:x y:y];
-            if([self isBlack:color] == NO)
-            {
-                tempDist = [self dist:loc b:CGPointMake(x, y)];
-                dist =  (dist < tempDist) ? dist : tempDist;
-            }
-        }
-    }
+    [self saveImageToFile:_outputImage name:@"output.png"];
 
-    return dist;
 }
 
 @end
