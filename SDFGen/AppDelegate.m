@@ -27,7 +27,7 @@ static CGPoint s_outside = {9999, 9999};
 
 - (void)loadInputImage
 {
-    _inputImage = [NSImage imageNamed:@"inputImage"];
+    _inputImage = [NSImage imageNamed:@"hirez"];
     
     [_inputImageView setImage:_inputImage];
 }
@@ -176,8 +176,8 @@ static int npot(int n)
     // normalize distance field
     
     // create dst image with adjusted size
-    float spread = 25.0;
-    float scale = 0.22;
+    float spread = 50;
+    float scale = 0.03;
     
     NSRect offscreenRect = NSMakeRect(0.0, 0.0, _inputImage.size.width + spread * 2,
                                       _inputImage.size.height + spread * 2);
