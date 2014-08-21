@@ -23,6 +23,11 @@ static CGPoint s_outside = {9999, 9999};
 {
     // Insert code here to initialize your application
     [self loadInputImage];
+
+    _spread.delegate = self;
+    _width.delegate = self;
+    _height.delegate = self;
+
 }
 
 - (void)loadInputImage
@@ -160,6 +165,39 @@ static int npot(int n)
     return n;
 }
 
+#pragma mark Textfield Delegates
+
+- (BOOL)control:(NSControl *)control textShouldBeginEditing:(NSText *)fieldEditor
+{
+    NSString* curtxt = fieldEditor.string;
+    
+    NSCharacterSet* decimals = [NSCharacterSet decimalDigitCharacterSet];
+    
+    NSRange wtf = [curtxt rangeOfCharacterFromSet:decimals];
+
+    return YES;
+}
+
+- (BOOL)control:(NSControl *)control textShouldEndEditing:(NSText *)fieldEditor
+{
+    if(control == _width)
+    {
+        NSLog(@"WIDTH: %li", [fieldEditor.string integerValue]);
+    }
+    
+    if(control == _height)
+    {
+        NSLog(@"HEIGHT: %li", [_height.stringValue integerValue]);
+    }
+
+    if(control == _spread)
+    {
+        NSLog(@"SPREAD: %li", [_spread.stringValue integerValue]);
+    }
+
+    return YES;
+}
+
 #pragma mark Actions
 
 - (IBAction)generate:(id)sender
@@ -176,8 +214,7 @@ static int npot(int n)
     // normalize distance field
     
     // create dst image with adjusted size
-    float spread = 50;
-    float scale = 0.03;
+    float spread = [_spread.stringValue floatValue];
     
     NSRect offscreenRect = NSMakeRect(0.0, 0.0, _inputImage.size.width + spread * 2,
                                       _inputImage.size.height + spread * 2);
@@ -290,7 +327,10 @@ static int npot(int n)
     free(distanceField);
     
     _outputImage = [[NSImage alloc] initWithCGImage:[offscreenRep CGImage] size:offscreenRect.size];
-    _outputImage = [self imageResize:_outputImage newSize:CGSizeMake(npot(s_width * scale), npot(s_height * scale))];
+    int outputWidth = _width.intValue;
+    int outputHeight = _height.intValue;
+    _outputImage = [self imageResize:_outputImage newSize:CGSizeMake(npot(outputWidth),
+                                                                     npot(outputHeight))];
     
     [_outputImageView setImage:_outputImage];
     
