@@ -109,46 +109,46 @@ static CGPoint compare(CGPoint** grid, CGPoint cell, int x, int y, int x2, int y
 
 static void fillDistance(CGPoint** grid, int width, int height)
 {
-    dispatch_queue_priority_t prio = DISPATCH_QUEUE_PRIORITY_DEFAULT;
-    dispatch_apply(height, dispatch_get_global_queue(prio, 0), ^(size_t y) {
-        dispatch_apply(width, dispatch_get_global_queue(prio, 0), ^(size_t x) {
-            CGPoint point;
+    CGPoint point;
+    for(int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
             point = grid[y][x];
             point = compare(grid, point, x, y, -1, 0);
             point = compare(grid, point, x, y, 0, -1);
             point = compare(grid, point, x, y, -1, -1);
             point = compare(grid, point, x, y, 1, -1);
             grid[y][x] = point;
-        });
-        dispatch_apply(width, dispatch_get_global_queue(prio, 0), ^(size_t x_inv) {
-            CGPoint point;
-            int x = width - x_inv;
+        }
+        
+        for(int x = width - 1; x >= 0; x--)
+        {
             point = grid[y][x];
             point = compare(grid, point, x, y, 1, 0);
             grid[y][x] = point;
-        });
-    });
+        }
+    }
     
-    
-    dispatch_apply(height, dispatch_get_global_queue(prio, 0), ^(size_t y) {
-        dispatch_apply(width, dispatch_get_global_queue(prio, 0), ^(size_t x_inv) {
-            CGPoint point;
-            int x = width - x_inv;
+    for (int y = height - 1; y >= 0; y--)
+    {
+        for (int x = width - 1; x >= 0; x--)
+        {
             point = grid[y][x];
             point = compare(grid, point, x, y, 1, 0);
             point = compare(grid, point, x, y, 0, 1);
             point = compare(grid, point, x, y, -1, 1);
             point = compare(grid, point, x, y, 1, 1);
             grid[y][x] = point;
-        });
+        }
         
-        dispatch_apply(width, dispatch_get_global_queue(prio, 0), ^(size_t x) {
-            CGPoint point;
+        for (int x = 0; x < width; x++)
+        {
             point = grid[y][x];
             point = compare(grid, point, x, y, -1, 0);
             grid[y][x] = point;
-        });
-    });
+        }
+    }
 }
 
 static int npot(int n)
@@ -229,6 +229,7 @@ static int npot(int n)
         
         if(s_distancesFilled >= 2)
         {
+            s_distancesFilled = 0;
             NSLog(@"distances generated, normalize and save output");
             // create distance field
             float** distanceField;
@@ -306,10 +307,9 @@ static int npot(int n)
             free(distanceField);
             
             _outputImage = [[NSImage alloc] initWithCGImage:[offscreenRep CGImage] size:offscreenRect.size];
-            int outputWidth = _width.intValue;
-            int outputHeight = _height.intValue;
-            _outputImage = [self imageResize:_outputImage newSize:CGSizeMake(npot(outputWidth),
-                                                                             npot(outputHeight))];
+            int outputWidth = (_width.intValue % 2) ? npot(_width.intValue) : _width.intValue;
+            int outputHeight = (_height.intValue % 2) ? npot(_height.intValue) : _height.intValue;
+            _outputImage = [self imageResize:_outputImage newSize:CGSizeMake(outputWidth, outputHeight)];
             
             [_outputImageView setImage:_outputImage];
             
@@ -352,6 +352,8 @@ static int npot(int n)
                 fillDistance(grid2, s_width, s_height);
                 finalize();
             });
+            
+            s_gencnt = 0;
         }
     };
     
