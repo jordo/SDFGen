@@ -236,8 +236,8 @@ static int npot(int n)
     // create dst image with adjusted size
     float spread = [_spread.stringValue floatValue];
     
-    NSRect offscreenRect = NSMakeRect(0.0, 0.0, _inputImage.size.width + spread * 2,
-                                      _inputImage.size.height + spread * 2);
+    NSRect offscreenRect = NSMakeRect(0.0, 0.0, _inputImage.size.width,
+                                      _inputImage.size.height);
     
     s_width = (int)offscreenRect.size.width;
     s_height = (int)offscreenRect.size.width;
