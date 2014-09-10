@@ -21,17 +21,42 @@ static CGPoint s_outside = {9999, 9999};
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    [self loadInputImage];
-
     _spread.delegate = self;
     _width.delegate = self;
     _height.delegate = self;
 
 }
 
-- (void)loadInputImage
+- (void)openDocument:(id)sender
 {
-    _inputImage = [NSImage imageNamed:@"hirez"];
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+    [openDlg setCanChooseFiles:YES];
+    [openDlg setAllowedFileTypes:[NSArray arrayWithObject:@"png"]];
+    
+    [openDlg beginSheetModalForWindow:self.window completionHandler:^(NSInteger result){
+        if (result == NSOKButton)
+        {
+            NSArray* files = [openDlg URLs];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0),
+                           dispatch_get_current_queue(), ^{
+                               for (int i = 0; i < [files count]; i++)
+                               {
+                                   NSString* fileName = [[files objectAtIndex:i] path];
+                                   [self loadInputImage:fileName];
+                               }
+                           });
+        }
+    }];
+}
+
+
+
+- (void)loadInputImage:(NSString*)fileName
+{
+    // Add to recent list of opened documents
+    [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:[NSURL fileURLWithPath:fileName]];
+    
+    _inputImage = [[NSImage alloc] initWithContentsOfFile:fileName];
     
     [_inputImageView setImage:_inputImage];
 }
@@ -40,7 +65,7 @@ static CGPoint s_outside = {9999, 9999};
 
 - (NSImage *)imageResize:(NSImage*)image newSize:(NSSize)newSize
 {
-    [image setScalesWhenResized:YES];
+    [image setScalesWhenResized:NO];
 
     NSImage *smallImage = [[NSImage alloc] initWithSize: newSize];
     [smallImage lockFocus];
@@ -309,6 +334,9 @@ static int npot(int n)
             _outputImage = [[NSImage alloc] initWithCGImage:[offscreenRep CGImage] size:offscreenRect.size];
             int outputWidth = (_width.intValue % 2) ? npot(_width.intValue) : _width.intValue;
             int outputHeight = (_height.intValue % 2) ? npot(_height.intValue) : _height.intValue;
+            CGFloat screenScale = [[NSScreen mainScreen] backingScaleFactor];
+            outputWidth /= screenScale;
+            outputHeight /= screenScale;
             _outputImage = [self imageResize:_outputImage newSize:CGSizeMake(outputWidth, outputHeight)];
             
             [_outputImageView setImage:_outputImage];
