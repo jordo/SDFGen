@@ -332,8 +332,12 @@ static int npot(int n)
             free(distanceField);
             
             _outputImage = [[NSImage alloc] initWithCGImage:[offscreenRep CGImage] size:offscreenRect.size];
-            int outputWidth = (_width.intValue % 2) ? npot(_width.intValue) : _width.intValue;
-            int outputHeight = (_height.intValue % 2) ? npot(_height.intValue) : _height.intValue;
+//            int outputWidth = (_width.intValue % 2) ? npot(_width.intValue) : _width.intValue;
+//            int outputHeight = (_height.intValue % 2) ? npot(_height.intValue) : _height.intValue;
+
+            int outputWidth = _width.intValue;
+            int outputHeight = _height.intValue;
+
             CGFloat screenScale = [[NSScreen mainScreen] backingScaleFactor];
             outputWidth /= screenScale;
             outputHeight /= screenScale;
