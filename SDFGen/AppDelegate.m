@@ -27,6 +27,8 @@ static CGPoint s_outside = {9999, 9999};
 
 }
 
+#pragma mark Save/Open actions
+
 - (void)openDocument:(id)sender
 {
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
@@ -67,6 +69,8 @@ static CGPoint s_outside = {9999, 9999};
     }];
 }
 
+#pragma mark Image helpers
+
 - (void)loadInputImage:(NSString*)fileName
 {
     // Add to recent list of opened documents
@@ -77,21 +81,32 @@ static CGPoint s_outside = {9999, 9999};
     [_inputImageView setImage:_inputImage];
 }
 
-#pragma mark Image helpers
-
 - (NSImage *)imageResize:(NSImage*)image newSize:(NSSize)newSize
-{
-   // [image setScalesWhenResized:NO];
-
-    NSImage *smallImage = [[NSImage alloc] initWithSize: newSize];
-    [smallImage lockFocus];
-    [image setSize: newSize];
-    [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+{   
+    NSBitmapImageRep *rep = [[NSBitmapImageRep alloc]
+                             initWithBitmapDataPlanes:NULL
+                             pixelsWide:newSize.width
+                             pixelsHigh:newSize.height
+                             bitsPerSample:8
+                             samplesPerPixel:4
+                             hasAlpha:YES
+                             isPlanar:NO
+                             colorSpaceName:NSCalibratedRGBColorSpace
+                             bytesPerRow:0
+                             bitsPerPixel:0];
+    [rep setSize:newSize];
     
-    [image drawAtPoint:CGPointMake(0, 0) fromRect:CGRectMake(0, 0, newSize.width, newSize.height)
-             operation:NSCompositeCopy fraction:1.0];
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:rep]];
+    [image drawInRect:NSMakeRect(0, 0, newSize.width, newSize.height) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
+    [NSGraphicsContext restoreGraphicsState];
     
-    [smallImage unlockFocus];
+    NSData *data = [rep representationUsingType:NSPNGFileType properties:nil];
+    
+    NSImage* smallImage = [[NSImage alloc] initWithData:data];
+    
+    NSLog(@"Output distance field: %f, %f - screenScale: %f", smallImage.size.width, smallImage.size.height, [[NSScreen mainScreen] backingScaleFactor]);
+    
     return smallImage;
 }
 
@@ -352,8 +367,8 @@ static int npot(int n)
 //            int outputWidth = (_width.intValue % 2) ? npot(_width.intValue) : _width.intValue;
 //            int outputHeight = (_height.intValue % 2) ? npot(_height.intValue) : _height.intValue;
 
-            int outputWidth = _width.intValue;
-            int outputHeight = _height.intValue;
+            float outputWidth = _width.intValue;
+            float outputHeight = _height.intValue;
 
             CGFloat screenScale = [[NSScreen mainScreen] backingScaleFactor];
             outputWidth /= screenScale;
@@ -362,7 +377,6 @@ static int npot(int n)
             
             [_outputImageView setImage:_outputImage];
             
-            //[self saveImageToFile:_outputImage name:@"output.png"];
             _generateButton.enabled = YES;
         }
         
