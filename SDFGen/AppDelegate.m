@@ -49,7 +49,23 @@ static CGPoint s_outside = {9999, 9999};
     }];
 }
 
-
+- (void)saveDocumentAs:(id)sender
+{
+    if(!_outputImage)
+        return;
+    
+    NSWindow* window = [self window];
+    NSSavePanel* panel = [NSSavePanel savePanel];
+    [panel setNameFieldStringValue:@"output.png"];
+    [panel beginSheetModalForWindow:window completionHandler:^(NSInteger result){
+        if (result == NSFileHandlingPanelOKButton)
+        {
+            NSString* path = [panel URL].path;
+            
+            [self saveImageToFile:_outputImage name:path];
+        }
+    }];
+}
 
 - (void)loadInputImage:(NSString*)fileName
 {
@@ -65,7 +81,7 @@ static CGPoint s_outside = {9999, 9999};
 
 - (NSImage *)imageResize:(NSImage*)image newSize:(NSSize)newSize
 {
-    [image setScalesWhenResized:NO];
+   // [image setScalesWhenResized:NO];
 
     NSImage *smallImage = [[NSImage alloc] initWithSize: newSize];
     [smallImage lockFocus];
@@ -81,15 +97,12 @@ static CGPoint s_outside = {9999, 9999};
 
 - (void)saveImageToFile:(NSImage*)image name:(NSString*)name
 {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsPath = [paths objectAtIndex:0];
-    NSString* path = [NSString stringWithFormat:@"%@/%@", documentsPath, name];
-    
     NSData* imageData = [image TIFFRepresentation];
     NSBitmapImageRep *rep = [[NSBitmapImageRep imageRepsWithData:imageData] objectAtIndex:0];
     NSDictionary *imageProps = [NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:1.0] forKey:NSImageCompressionFactor];
     imageData = [rep representationUsingType:NSJPEGFileType properties:imageProps];
-    if([imageData writeToFile:path atomically: NO] == NO)
+   
+    if([imageData writeToFile:name atomically: NO] == NO)
     {
         NSLog(@"Warning: Failed to save %@", name);
     }
@@ -219,6 +232,10 @@ static int npot(int n)
 
 - (IBAction)generate:(id)sender
 {
+    [[self.width window] makeFirstResponder:nil];
+    [[self.height window] makeFirstResponder:nil];
+    [[self.spread window] makeFirstResponder:nil];
+    
     NSBitmapImageRep* inputBitmapRep = [[_inputImage representations] objectAtIndex:0];
     
     if(inputBitmapRep == nil)
@@ -230,7 +247,7 @@ static int npot(int n)
     // create dst image with adjusted size
     // create 2 grid representation for each input/output image
     // fill out distance fields
-    // generate distancefield by subtract the grids
+    // generate distancefield by subtracting the grids
     // normalize distance field
     
     // create dst image with adjusted size
@@ -345,7 +362,7 @@ static int npot(int n)
             
             [_outputImageView setImage:_outputImage];
             
-            [self saveImageToFile:_outputImage name:@"output.png"];
+            //[self saveImageToFile:_outputImage name:@"output.png"];
             _generateButton.enabled = YES;
         }
         
